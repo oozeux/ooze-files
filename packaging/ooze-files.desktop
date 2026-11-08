@@ -1,0 +1,22 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Ooze Files
+GenericName=File Manager
+Comment=Administrador de archivos minimalista para Wayland
+Comment[en]=Minimalist file manager for Wayland
+Exec=ooze-files %U
+Icon=ooze-files
+Terminal=false
+Categories=System;FileManager;Qt;
+MimeType=inode/directory;application/x-directory;
+Keywords=files;archivos;file manager;explorador;gestor;
+StartupNotify=true
+StartupWMClass=ooze-files
+SingleMainWindow=false
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=New window
+Name[es]=Nueva ventana
+Exec=ooze-files --new-window %U
