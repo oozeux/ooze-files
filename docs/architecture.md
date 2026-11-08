@@ -43,6 +43,12 @@ src/core/               lógica sin QML
   OpenWith              aplicaciones por tipo MIME y lanzamiento (GIO)
   FilePreview           datos de vista previa y propiedades de un archivo local
   ThumbnailCache        caché freedesktop ~/.cache/thumbnails
+  FileOperations        copiar, mover, renombrar, papelera, comprimir y extraer en un
+                        hilo serializado
+  DirectoryWatcher      vigilancia con inotify y refresco incremental
+  TrashService          papelera freedesktop (listar, restaurar, vaciar)
+  RecentFiles           lista de recientes
+  FileIcons             iconos aproximados por tipo y extensión
   UndoStack             pila de deshacer/rehacer (datos puros, sin hilos)
   Archive               formatos y comandos de compresión y extracción
   Devices               parser de UDisks2 y DeviceMonitor (D-Bus del sistema)
@@ -327,6 +333,7 @@ el archivo roto automáticamente.
 
 - Sin vigilancia de pestañas inactivas en tiempo real: se marcan sucias y se
   refrescan al activarlas.
-- Una sola ventana; varias carpetas solo mediante pestañas.
+- Cada ventana es un proceso independiente (`--new-window`, `Ctrl+N`); dentro de
+  una ventana, varias carpetas se gestionan con pestañas.
 - `FileListProxyModel` usa la API de filtro disponible en cada versión de Qt;
   en Qt ≥ 6.9 usa `beginFilterChange`/`endFilterChange`.

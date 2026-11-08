@@ -349,10 +349,10 @@ El registro se controla con `QT_LOGGING_RULES`, por ejemplo
 | Opción | Por defecto | Estado |
 | --- | --- | --- |
 | `OOZE_FILES_BUILD_TESTS` | `ON` | compila `tests/` |
-| `OOZE_FILES_WITH_ARCHIVES` | `OFF` | reservada (fase 6); activarla aborta la configuración |
-| `OOZE_FILES_WITH_REMOTE` | `OFF` | reservada (fase 5) |
-| `OOZE_FILES_WITH_UDISKS` | `OFF` | reservada (fase 5) |
-| `OOZE_FILES_WITH_XDG_THUMBNAILERS` | `OFF` | reservada (fase 5) |
+| `OOZE_FILES_WITH_ARCHIVES` | `OFF` | reservada para libarchive; activarla aborta la configuración |
+| `OOZE_FILES_WITH_REMOTE` | `OFF` | reservada para gvfs/MTP |
+| `OOZE_FILES_WITH_UDISKS` | `OFF` | reservada para detalles avanzados de UDisks2 |
+| `OOZE_FILES_WITH_XDG_THUMBNAILERS` | `OFF` | reservada para miniaturas externas |
 
 Las opciones reservadas existen para que el paquete pueda declararlas sin
 sorpresas, pero no hay código detrás: activarlas falla de forma explícita en vez

@@ -4,7 +4,7 @@ Administrador de archivos minimalista para Wayland, escrito en C++20 y Qt 6/QML.
 Pensado como gestor de archivos diario: rápido, sin dependencias de escritorio y
 con una interfaz que respeta el tema del sistema.
 
-Estado: **alfa**. La navegación local es funcional y estable; las operaciones de
+Estado: **Alfa**. La navegación local es funcional y estable; las operaciones de
 archivos y los backends remotos están en fases posteriores (ver
 [Estado y hoja de ruta](#estado-y-hoja-de-ruta)).
 
@@ -54,8 +54,15 @@ archivos y los backends remotos están en fases posteriores (ver
 - Modo ligero opcional para reducir el consumo de memoria en reposo.
 - Menú principal compacto con submenús (Vista, Tamaño de iconos, Densidad,
   Ordenar por, Tema, Nuevo, Herramientas) y configuración como página completa.
-- Deshacer y rehacer (`Ctrl+Z`) para mover, copiar, renombrar, crear, comprimir y
-  enviar a la papelera.
+- Deshacer y rehacer (`Ctrl+Z`, `Ctrl+Mayús+Z` o `Ctrl+Y`) para mover, copiar,
+  renombrar, crear, comprimir y enviar a la papelera.
+- Copiar y cortar con marca visual en la vista: lo copiado se resalta con un
+  borde de acento y lo cortado se atenúa hasta pegarlo. El portapapeles es
+  interoperable con Nautilus y Dolphin y sobrevive a otras operaciones como
+  borrar o mover por arrastre.
+- Papelera de freedesktop (ver, restaurar, vaciar) y vista de Recientes.
+- Diálogo de conflictos al copiar o mover (sobrescribir, otro nombre, combinar
+  carpetas) con «Aplicar a todos».
 - Comprimir (zip, tar.gz, tar.xz, tar.zst, 7z) y extraer desde el menú
   contextual, con las herramientas del sistema.
 - Dispositivos en la barra lateral con montar, desmontar y expulsar (UDisks2) y
@@ -73,7 +80,7 @@ archivos y los backends remotos están en fases posteriores (ver
 
 ## Requisitos
 
-- Linux con Wayland (probado en Niri; X11 debería funcionar sin garantías).
+- Linux con Wayland (probado en Niri, Hyprland y MangoWM; X11 debería funcionar sin garantías).
 - Qt 6.5 o superior: `Core`, `Gui`, `Qml`, `Quick`, `DBus`, `Svg`, `Test`.
   `Svg` es necesario para los iconos de los temas actuales.
 - CMake 3.21+, Ninja (o Make) y un compilador con C++20.
@@ -159,6 +166,12 @@ sesión anterior (configurable en Ajustes → Comportamiento → Pestañas).
 | `Alt+9` | Última pestaña |
 | `Ctrl+Enter` | Abrir la selección en una pestaña nueva |
 | `Ctrl+Shift+N` | Nueva carpeta |
+| `Espacio` | Vista previa rápida |
+| `Ctrl+Shift+F` | Buscar en subcarpetas |
+| `Shift+F2` | Renombrado en lote |
+| `Alt+Intro` | Propiedades |
+| `F11` | Panel de información |
+| `Ctrl+Z` / `Ctrl+Shift+Z` (`Ctrl+Y`) | Deshacer / rehacer |
 | `Ctrl+A` | Seleccionar todo |
 | `Ctrl+C` / `Ctrl+X` / `Ctrl+V` | Copiar / cortar / pegar |
 | `Ctrl+Q` | Salir |
@@ -212,6 +225,7 @@ cada cambio. Todas las claves, valores válidos y ejemplos están en
 - [Capa VFS](docs/vfs.md): contrato de backends y cómo añadir uno.
 - [Arrastrar y soltar](docs/drag-and-drop.md): comportamiento, límites y
   verificación.
+- [Novedades por versión](CHANGELOG.md): características nuevas y mejoras.
 - [Plan: selección por arrastre](docs/plan-seleccion-por-arrastre.md): marco de
   selección, geometría, modos y verificación.
 - [Acciones y paleta de comandos](docs/actions.md): tabla única de acciones,
@@ -221,6 +235,9 @@ cada cambio. Todas las claves, valores válidos y ejemplos están en
   y plan de temas externos.
 - [Menús emergentes](docs/menus.md): tamaño, posición, scroll y submenús.
 - [Vista previa, Abrir con y miniaturas](docs/preview.md).
+- [Búsqueda recursiva](docs/search.md).
+- [Renombrado en lote](docs/bulk-rename.md).
+- [Plan: pruebas de Abrir con](docs/plan-tst-openwith.md).
 - [Deshacer y rehacer](docs/undo.md).
 - [Recientes](docs/recents.md): origen de datos y qué significa «reciente».
 - [Papelera](docs/trash.md): integración con la papelera de freedesktop.
@@ -237,12 +254,16 @@ cada cambio. Todas las claves, valores válidos y ejemplos están en
 ## Estructura
 
 ```
-src/core/        modelo, listado, rutas, lugares, terminal
-src/vfs/         contrato VFS, registro y backend local POSIX
+src/core/        modelos, listado, operaciones, deshacer, papelera, vista previa,
+                 miniaturas, dispositivos, archivos comprimidos, terminal
+src/vfs/         contrato VFS, registro y backends (local, recientes, papelera)
 src/settings/    configuración JSON
-src/app/         controlador QML, instancia única, iconos, main
+src/theme/       paletas, temas externos y portal del escritorio
+src/app/         controlador QML, pestañas, acciones, búsqueda, instancia única,
+                 proveedores de imagen, idioma, main
 qml/             interfaz (Qt Quick sin QtQuick Controls)
-tests/unit/      pruebas de rutas, configuración, VFS y modelo
+i18n/            traducciones
+tests/unit/      pruebas unitarias y de integración
 nix/             devshell y paquete
 packaging/       archivo .desktop e iconos
 ```
@@ -253,45 +274,28 @@ packaging/       archivo .desktop e iconos
 ctest --test-dir build --output-on-failure
 ```
 
-Incluye pruebas de rutas en bytes, configuración, backend local, modelo proxy,
-controlador (incluido el arrastre y la soltura), cargador de temas y una prueba
-de humo que carga la interfaz completa en modo offscreen.
+Cubre rutas en bytes, configuración, backend local, modelo proxy, operaciones de
+archivos, deshacer, papelera, archivos comprimidos, dispositivos, vigilancia de
+directorios, recientes, vista previa, Abrir con, iconos, pestañas, temas y el
+controlador (arrastre, soltura y portapapeles).
 
 ## Estado y hoja de ruta
 
-Implementado:
+Implementado: navegación con pestañas e historial, vistas de cuadrícula y lista,
+operaciones de archivos con conflictos y deshacer, papelera, recientes,
+portapapeles y arrastrar y soltar, vista previa y miniaturas, búsqueda
+recursiva, renombrado en lote, comprimir y extraer, dispositivos, paleta de
+comandos, temas externos e idiomas español e inglés. El detalle por versión está
+en [CHANGELOG.md](CHANGELOG.md).
 
-- Navegación, historial, lugares, vistas, ordenación, filtro, temas, instancia
-  única, terminal, configuración, iconos.
-- Paletas en JSON (`ui.palette`), importación de solo lectura de OozeShell,
-  qt6ct y KDE, tema de iconos, escala y familia tipográficas configurables;
-  selector de paleta con vista previa y acceso a su carpeta en Ajustes.
-- Operaciones de archivos: copiar/mover con `FICLONE` cuando sea posible,
-  renombrar atómico, papelera vía GIO, creación de carpetas y archivos.
-- Selección múltiple, menú contextual (elemento y fondo), atajos de teclado,
-  diálogo de configuración.
-- Vigilancia de directorios con `inotify` y refresco incremental.
-- Arrastrar y soltar: salida como `text/uri-list`, tira flotante con icono y
-  nombre, soltura en carpetas, lugares y fondo de la vista, con menú para mover,
-  copiar o enlazar.
-- Registro único de acciones (`ActionRegistry`): el menú principal y la paleta
-  de comandos se generan de la misma tabla, con estado habilitado/marcado en
-  vivo. Ver [docs/actions.md](docs/actions.md).
-- Selección por marco en cuadrícula y lista, con modos reemplazar/añadir/alternar,
-  restauración con `Esc` y desplazamiento automático en los bordes. Ver
-  [docs/plan-seleccion-por-arrastre.md](docs/plan-seleccion-por-arrastre.md).
-- Pestañas completas: estado independiente por carpeta, barra con desbordamiento,
-  menú contextual, reapertura, límite configurable, clic central/`Ctrl+Enter`,
-  restauración de sesión y `--new-tab` con instancia única. Ver
-  [docs/tabs.md](docs/tabs.md) y [docs/plan-tabs.md](docs/plan-tabs.md).
+Pendiente:
 
-Pendiente, en orden:
-
-1. Temas externos: queda la exportación opcional a formatos qt6ct/KDE. Plan y
-   estado en [docs/temas.md](docs/temas.md).
-2. Ventanas múltiples reales.
-3. Backend gvfs/MTP y dispositivos extraíbles.
-4. Archivos comprimidos con libarchive y búsqueda recursiva.
+1. Ocultar y reordenar entradas de menú desde la configuración
+   ([docs/actions.md](docs/actions.md#pendiente)).
+2. Exportación opcional de temas a formatos qt6ct/KDE
+   ([docs/temas.md](docs/temas.md)).
+3. Backends remotos gvfs/MTP y detalles avanzados de UDisks2.
+4. Navegar dentro de archivos comprimidos con libarchive.
 
 ## Licencia
 

@@ -30,7 +30,7 @@ disco, así que no puede escapar de la raíz: la pila nunca retrocede por debajo
 `/`.
 
 `isSameOrAncestor` compara por componentes completos (`/home/ana` no es ancestro
-de `/home/ana2`), pensado para futuras operaciones de copia y pegado.
+de `/home/ana2`), usado por las operaciones de copiar y mover.
 
 ## Enlaces simbólicos
 
@@ -40,9 +40,10 @@ de `/home/ana2`), pensado para futuras operaciones de copia y pegado.
   `FlagSymlinkBroken` si el destino no existe.
 - Navegar a un enlace lo resuelve el sistema de archivos al abrir el
   directorio: no hay seguimiento manual que pueda desincronizarse.
-- Las futuras operaciones de copia deben usar `openat`/`O_NOFOLLOW` cuando el
-  destino esté en una ruta no confiable y comprobar que origen y destino siguen
-  dentro de lo esperado antes de renombrar.
+- Las operaciones de archivos inspeccionan el origen con `lstat`, renombran con
+  `renameat2(RENAME_NOREPLACE)` para no pisar destinos y, entre montajes
+  (`EXDEV`), copian a un temporal oculto `.ooze-tmp-*` que se renombra al
+  terminar.
 
 ## Apertura de archivos
 
@@ -114,11 +115,11 @@ muestra avisos y errores.
 ## Límites conocidos
 
 - No hay sandbox: la aplicación puede leer todo lo que el usuario puede leer.
-- La papelera y las copias (fases futuras) deben validar cruces de sistemas de
-  archivos: `rename` solo es atómico dentro del mismo montaje.
-- La vista previa y las miniaturas (fase 5) serán la primera superficie que
-  interpreta contenido de terceros; deberán ejecutarse fuera del hilo principal
-  y con límites de tamaño y tiempo.
+- `rename` solo es atómico dentro del mismo montaje; entre montajes se usa copia
+  más renombrado final.
+- La vista previa y las miniaturas son la superficie que interpreta contenido de
+  terceros; se ejecutan fuera del hilo principal y con límites de tamaño (ver
+  [preview.md](preview.md)).
 - El bus de sesión no autentica más allá del usuario: cualquier proceso suyo
   puede pedir navegar. Es el mismo nivel de confianza que abrir el gestor a mano.
 

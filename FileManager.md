@@ -2,6 +2,7 @@
 
 > **Estado:** plan revisado. Sustituye a la versión anterior (2026-10).
 > **Licencia:** GPL-3.0-or-later.
+> **Avance (0.1.46):** fases 0 a 3 implementadas en lo esencial (navegación, operaciones con papelera y deshacer, pestañas, vista previa, búsqueda, paleta de comandos). Fase 4 parcial: comprimir/extraer con herramientas del sistema y dispositivos UDisks2; pendientes libarchive y gvfs/MTP. Fases 5 y 6 parciales: temas e i18n completos, paquete Nix; pendientes acciones personalizadas y menús configurables. Ver [CHANGELOG.md](CHANGELOG.md).
 > **Stack decidido:** C++20 + Qt 6 / Qt Quick (QML) + CMake.
 > **Objetivo de uso:** reemplazo diario de Nautilus / Dolphin / Thunar en escritorios Wayland minimalistas (Hyprland, Niri, MangoWM) y también en KDE Plasma y GNOME.
 
